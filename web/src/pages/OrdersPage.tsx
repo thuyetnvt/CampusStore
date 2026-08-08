@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { PackageSearch } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { getOrders } from '../api/orders';
 import { formatCurrency } from '../utils/format';
 import { OrderStatus, PaymentStatus } from '../types/order';
@@ -30,11 +30,21 @@ function formatDate(value: string) {
 }
 
 export function OrdersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Math.max(Number(searchParams.get('page') ?? '1') || 1, 1);
+  const pageSize = 10;
+
   const ordersQuery = useQuery({
-    queryKey: ['orders', 1],
-    queryFn: () => getOrders(1),
+    queryKey: ['orders', page, pageSize],
+    queryFn: () => getOrders(page, pageSize),
     retry: false
   });
+
+  function goToPage(nextPage: number) {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(nextPage));
+    setSearchParams(params);
+  }
 
   if (ordersQuery.isLoading) {
     return (
@@ -57,13 +67,18 @@ export function OrdersPage() {
   }
 
   const orders = ordersQuery.data?.items ?? [];
+  const totalItems = ordersQuery.data?.totalItems ?? 0;
+  const totalPages = ordersQuery.data?.totalPages ?? 1;
+  const currentPage = ordersQuery.data?.page ?? page;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-950">Đơn hàng của tôi</h1>
-          <p className="mt-2 text-sm text-slate-600">Theo dõi trạng thái, hủy đơn sớm và đánh giá sản phẩm đã mua.</p>
+          <p className="mt-2 text-sm text-slate-600">
+            Tổng số đơn: {totalItems}. Theo dõi trạng thái, hủy đơn sớm và đánh giá sản phẩm đã mua.
+          </p>
         </div>
         <PackageSearch className="hidden h-8 w-8 text-emerald-700 sm:block" aria-hidden="true" />
       </div>
@@ -100,6 +115,30 @@ export function OrdersPage() {
           ))}
         </div>
       )}
+
+      {orders.length ? (
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Trang trước
+          </button>
+          <div className="text-sm text-slate-600">
+            Trang {currentPage} / {totalPages}
+          </div>
+          <button
+            type="button"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Trang sau
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

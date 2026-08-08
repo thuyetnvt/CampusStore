@@ -1,8 +1,8 @@
 import { http } from './http';
 import type { CreateReviewRequest, OrderDetail, OrderPage } from '../types/order';
 
-export async function getOrders(page = 1) {
-  const response = await http.get<OrderPage>('/orders', { params: { page, pageSize: 10 } });
+export async function getOrders(page = 1, pageSize = 10) {
+  const response = await http.get<OrderPage>('/orders', { params: { page, pageSize } });
   return response.data;
 }
 
