@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CampusStore.Api;
 using CampusStore.Application.Dtos;
 using CampusStore.Domain.Entities;
 using CampusStore.Domain.Enums;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CampusStore.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = AuthPolicies.CustomerOnly)]
 [Route("api/reviews")]
 public sealed class ReviewsController : ControllerBase
 {

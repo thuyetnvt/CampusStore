@@ -1,5 +1,66 @@
 # CampusStore Testing
 
+## Latest Verification Snapshot
+
+Date: 2026-08-09
+
+### Order Status Flow Update
+
+- `rg -n "Preparing|OrderStatus\.Preparing" src web tests`: no remaining UI/selectable status references found.
+- `npm run lint` from `web`: passed.
+- `npm run build` from `web`: passed.
+- `dotnet build`: failed because the normal backend output files under `src/CampusStore.Api/bin/Debug/net10.0` are locked by the running `CampusStore.Api (39180)` process.
+- `dotnet test -p:UseAppHost=false -p:OutDir=artifacts/dotnet-test/`: passed with 22 unit tests and 3 integration tests.
+- Known warning still present: `NU1903` for transitive `Microsoft.OpenApi 2.0.0`.
+
+### Environment
+
+- .NET SDK 10 is available.
+- Node.js 24+ and npm 11+ are required for the frontend.
+- MySQL 8+ is required for runtime database access.
+- Backend connection strings must be configured through User Secrets or environment variables. Do not put real passwords in `appsettings.json`.
+- Demo users are seeded only when `Seed:DemoPassword` is configured.
+
+### Commands Run
+
+- `dotnet restore`: passed.
+- `dotnet build`: passed.
+- `dotnet test`: passed with 21 unit tests and 3 integration tests.
+- `dotnet ef migrations list --project src/CampusStore.Infrastructure --startup-project src/CampusStore.Api`: listed `20260808085153_InitialCreate`, but could not determine applied migration status because MySQL rejected the configured `campusstore` user.
+- `npm run lint`: passed.
+- `npm run build`: failed because `web/src/routes/router.tsx` imports `web/src/pages/AdminDashboardPage.tsx`, but that page file is missing in the current working tree.
+
+## Current Auth And Layout Refactor
+
+- `npm run lint`: passed cleanly.
+- `npm run build`: passed cleanly.
+- `dotnet build`: failed when the default output folder was locked by a running `CampusStore.Api` process, then passed with `-p:UseAppHost=false -p:OutDir=artifacts/dotnet-build/`.
+- `dotnet test`: passed with `-p:UseAppHost=false -p:OutDir=artifacts/dotnet-test/` while the same API process was still running.
+- Frontend purchase-action guard was added afterward; `npm run lint` and `npm run build` still passed.
+- Known environment warning: `NU1903` remains for transitive `Microsoft.OpenApi 2.0.0`.
+
+### Runtime Checks Completed
+
+- Home shell returned HTTP 200 from the Vite dev server.
+- Backend health endpoint returned HTTP 200.
+- `GET /api/categories` returned 8 active categories.
+- `GET /api/products?page=1&pageSize=3` returned a paged product result.
+- Category filtering with `categorySlug=but-viet` returned products.
+- Price filtering with `minPrice` and `maxPrice` returned products.
+- Product detail returned category, images, and variants.
+- Unauthenticated cart/order calls returned HTTP 401.
+- Customer register/login through API worked with a temporary audit account.
+- Add to cart, quantity update, item delete, COD order creation, order detail, and customer cancellation worked through API.
+
+### Known Current Limitations
+
+- Frontend production build currently fails until `web/src/pages/AdminDashboardPage.tsx` is restored or the route import is changed.
+- Product search is accent-sensitive in the current environment: searching `but` did not match products named `Bút`.
+- Backend order creation only checks receiver fields for non-empty values; invalid phone/address formats can still be accepted.
+- Staff/Admin browser flows were not manually verified because demo passwords are configured outside the repository.
+- Mobile UI was not visually verified because no browser automation surface was available in the current environment.
+- `NU1903` remains for transitive `Microsoft.OpenApi 2.0.0`.
+
 ## Required Backend Tests
 
 - Duplicate email registration is rejected.

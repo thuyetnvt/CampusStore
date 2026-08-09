@@ -3,6 +3,7 @@ import { LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { login } from '../api/auth';
+import { returnToKey } from '../routes/authSession';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -14,7 +15,9 @@ export function LoginPage() {
     mutationFn: () => login({ email, password }),
     onSuccess: (user) => {
       queryClient.setQueryData(['me'], user);
-      navigate('/');
+      const returnTo = sessionStorage.getItem(returnToKey);
+      sessionStorage.removeItem(returnToKey);
+      navigate(returnTo && returnTo !== '/login' ? returnTo : '/', { replace: true });
     }
   });
 

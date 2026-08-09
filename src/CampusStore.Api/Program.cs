@@ -1,4 +1,6 @@
 using CampusStore.Application;
+using CampusStore.Api;
+using CampusStore.Domain.Constants;
 using CampusStore.Infrastructure;
 using CampusStore.Infrastructure.Seeding;
 
@@ -18,6 +20,12 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddControllers();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthPolicies.CustomerOnly, policy => policy.RequireRole(RoleNames.Customer));
+    options.AddPolicy(AuthPolicies.StaffOrAdmin, policy => policy.RequireRole(RoleNames.Staff, RoleNames.Admin));
+    options.AddPolicy(AuthPolicies.AdminOnly, policy => policy.RequireRole(RoleNames.Admin));
+});
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

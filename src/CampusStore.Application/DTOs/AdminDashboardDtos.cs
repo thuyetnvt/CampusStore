@@ -14,7 +14,9 @@ public sealed record AdminDashboardDto(
     IReadOnlyList<OrderStatusCountDto> OrdersByStatus,
     IReadOnlyList<TopProductDto> TopProducts,
     IReadOnlyList<LowStockVariantDto> LowStockItems,
-    IReadOnlyList<AdminOrderListItemDto> RecentOrders
+    IReadOnlyList<AdminOrderListItemDto> RecentOrders,
+    IReadOnlyList<AdminDashboardTrendPointDto> TrendPoints,
+    string TrendRange
 );
 
 public sealed record OrderStatusCountDto(OrderStatus Status, int Count);
@@ -28,4 +30,10 @@ public sealed record LowStockVariantDto(
     string Sku,
     int StockQuantity,
     int LowStockThreshold
+);
+
+public sealed record AdminDashboardTrendPointDto(
+    string Label,
+    decimal Revenue,
+    int OrderCount
 );

@@ -3,16 +3,8 @@ import { PackageSearch } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import { getOrders } from '../api/orders';
 import { formatCurrency } from '../utils/format';
-import { OrderStatus, PaymentStatus } from '../types/order';
-
-const statusLabels: Record<OrderStatus, string> = {
-  [OrderStatus.Pending]: 'Chờ xác nhận',
-  [OrderStatus.Confirmed]: 'Đã xác nhận',
-  [OrderStatus.Preparing]: 'Đang chuẩn bị',
-  [OrderStatus.Shipping]: 'Đang giao',
-  [OrderStatus.Completed]: 'Hoàn tất',
-  [OrderStatus.Cancelled]: 'Đã hủy'
-};
+import { PaymentStatus } from '../types/order';
+import { getOrderStatusLabel } from '../utils/orderStatus';
 
 const paymentLabels: Record<PaymentStatus, string> = {
   [PaymentStatus.Unpaid]: 'Chưa thanh toán',
@@ -103,7 +95,7 @@ export function OrdersPage() {
                 <div className="mt-1 text-sm text-slate-500">{formatDate(order.createdAt)}</div>
               </div>
               <div className="text-sm">
-                <div className="font-medium">{statusLabels[order.orderStatus]}</div>
+                <div className="font-medium">{getOrderStatusLabel(order.orderStatus)}</div>
                 <div className="mt-1 text-slate-500">{order.totalQuantity} sản phẩm</div>
               </div>
               <div className="text-sm">

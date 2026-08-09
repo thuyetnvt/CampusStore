@@ -456,7 +456,6 @@ public static class DevelopmentDataSeeder
         {
             OrderStatus.Pending,
             OrderStatus.Confirmed,
-            OrderStatus.Preparing,
             OrderStatus.Shipping,
             OrderStatus.Completed,
             OrderStatus.Cancelled

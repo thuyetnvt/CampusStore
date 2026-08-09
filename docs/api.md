@@ -9,8 +9,6 @@ POST   /api/auth/register
 POST   /api/auth/login
 POST   /api/auth/logout
 GET    /api/auth/me
-POST   /api/auth/forgot-password
-POST   /api/auth/reset-password
 ```
 
 ## Categories
@@ -18,9 +16,6 @@ POST   /api/auth/reset-password
 ```text
 GET    /api/categories
 GET    /api/categories/{id}
-POST   /api/admin/categories
-PUT    /api/admin/categories/{id}
-PATCH  /api/admin/categories/{id}/status
 ```
 
 ## Products
@@ -29,12 +24,9 @@ PATCH  /api/admin/categories/{id}/status
 GET    /api/products
 GET    /api/products/{idOrSlug}
 GET    /api/products/{id}/related
-POST   /api/admin/products
-PUT    /api/admin/products/{id}
-PATCH  /api/admin/products/{id}/status
-POST   /api/admin/products/{id}/images
-DELETE /api/admin/products/{id}/images/{imageId}
 ```
+
+`GET /api/products` supports query filters from `ProductQuery` plus `saleOnly=true`.
 
 ## Cart and Checkout
 
@@ -45,38 +37,41 @@ PUT    /api/cart/items/{id}
 DELETE /api/cart/items/{id}
 DELETE /api/cart
 POST   /api/checkout/preview
-POST   /api/orders
 ```
 
 ## Orders
 
 ```text
 GET    /api/orders
+POST   /api/orders
 GET    /api/orders/{id}
 POST   /api/orders/{id}/cancel
-GET    /api/admin/orders
-GET    /api/admin/orders/{id}
-PATCH  /api/admin/orders/{id}/status
 ```
 
-## Dashboard
+## Reviews
 
 ```text
-GET    /api/admin/dashboard/summary
-GET    /api/admin/dashboard/revenue
-GET    /api/admin/dashboard/best-sellers
-GET    /api/admin/dashboard/low-stock
+POST   /api/reviews
 ```
 
-## Error Shape
+## Admin
 
-```json
-{
-  "status": 400,
-  "code": "VALIDATION_ERROR",
-  "message": "Du lieu khong hop le.",
-  "errors": {
-    "fieldName": ["Noi dung loi"]
-  }
-}
+```text
+GET    /api/admin/dashboard
+GET    /api/admin/dashboard?range=day|week|month
+GET    /api/admin/orders
+GET    /api/admin/orders/{id}
+PUT    /api/admin/orders/{id}/status
+GET    /api/admin/products
+GET    /api/admin/products/{id}
+POST   /api/admin/products
+PUT    /api/admin/products/{id}
+PATCH  /api/admin/products/{id}/active
 ```
+
+## Error Responses
+
+Error payloads are controller-specific in the current codebase.
+Most endpoints return a JSON object with a `message` field for business-rule failures.
+ASP.NET Core model validation may still return the framework's default 400 response shape.
+

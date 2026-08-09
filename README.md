@@ -59,7 +59,7 @@ dotnet user-secrets set "Seed:DemoPassword" "YOUR_DEMO_PASSWORD" --project src/C
 
 ## Demo Accounts
 
-Development seed data will provide:
+Development seed data will provide these accounts when `Seed:DemoPassword` is configured:
 
 ```text
 Admin: admin@campusstore.local
@@ -67,15 +67,16 @@ Staff: staff@campusstore.local
 Customer: customer@campusstore.local
 ```
 
-Passwords must be configured through User Secrets or environment variables.
+Passwords are not stored in the repository. Configure them through User Secrets or environment variables.
 
 ## Current Status
 
-- Scaffold, database, Identity, seed data, catalog, cart, checkout, orders, reviews, admin order management, admin dashboard, and frontend authentication are implemented.
+- Scaffold, database, Identity, seed data, catalog, cart, checkout, orders, reviews, admin order management, admin products, and frontend authentication are implemented.
+- Admin dashboard data API exists, but the frontend dashboard page is currently missing in the working tree, so the frontend build is not green until that file is restored.
 - EF Core MySQL `AppDbContext` and `InitialCreate` migration are created and applied locally.
-- Backend build and tests currently pass.
-- Frontend lint and production build currently pass.
-- See `docs/testing.md` for phase-by-phase verification and smoke checks.
+- Backend build and tests pass.
+- Frontend lint passes; production build currently fails because `web/src/pages/AdminDashboardPage.tsx` is missing while `web/src/routes/router.tsx` still imports it.
+- See `docs/testing.md` for the latest verification snapshot and known limitations.
 
 ## Known Setup Note
 

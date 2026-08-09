@@ -4,30 +4,7 @@ import { useState } from 'react';
 import { getAdminOrder, getAdminOrders, updateAdminOrderStatus } from '../api/adminOrders';
 import { formatCurrency } from '../utils/format';
 import { OrderStatus, PaymentStatus } from '../types/order';
-
-const statusLabels: Record<OrderStatus, string> = {
-  [OrderStatus.Pending]: 'Chờ xác nhận',
-  [OrderStatus.Confirmed]: 'Đã xác nhận',
-  [OrderStatus.Preparing]: 'Đang chuẩn bị',
-  [OrderStatus.Shipping]: 'Đang giao',
-  [OrderStatus.Completed]: 'Hoàn tất',
-  [OrderStatus.Cancelled]: 'Đã hủy'
-};
-
-const paymentLabels: Record<PaymentStatus, string> = {
-  [PaymentStatus.Unpaid]: 'Chưa thanh toán',
-  [PaymentStatus.Pending]: 'Đang xử lý',
-  [PaymentStatus.Paid]: 'Đã thanh toán',
-  [PaymentStatus.Failed]: 'Thất bại',
-  [PaymentStatus.Refunded]: 'Đã hoàn tiền'
-};
-
-const nextStatuses: Partial<Record<OrderStatus, OrderStatus[]>> = {
-  [OrderStatus.Pending]: [OrderStatus.Confirmed, OrderStatus.Cancelled],
-  [OrderStatus.Confirmed]: [OrderStatus.Preparing, OrderStatus.Cancelled],
-  [OrderStatus.Preparing]: [OrderStatus.Shipping, OrderStatus.Cancelled],
-  [OrderStatus.Shipping]: [OrderStatus.Completed]
-};
+import { getAdminNextStatuses, getOrderStatusLabel, visibleOrderStatusOptions } from '../utils/orderStatus';
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', {
@@ -75,7 +52,7 @@ export function AdminOrdersPage() {
 
   const statusMutation = useMutation({
     mutationFn: ({ id, nextStatus }: { id: number; nextStatus: OrderStatus }) =>
-      updateAdminOrderStatus(id, nextStatus, `Cập nhật trạng thái sang ${statusLabels[nextStatus]}.`),
+      updateAdminOrderStatus(id, nextStatus, `Cập nhật trạng thái sang ${getOrderStatusLabel(nextStatus)}.`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-order', activeOrderId] });
@@ -90,7 +67,7 @@ export function AdminOrdersPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-950">Quản lý đơn hàng</h1>
-          <p className="mt-2 text-sm text-slate-600">Nhận đơn, chuẩn bị, giao hàng và cập nhật trạng thái.</p>
+          <p className="mt-2 text-sm text-slate-600">Nhận đơn, xác nhận, giao hàng và cập nhật trạng thái.</p>
         </div>
       </div>
 
@@ -116,9 +93,9 @@ export function AdminOrdersPage() {
           className="rounded-md border border-slate-300 bg-white px-3 py-2"
         >
           <option value={0}>Tất cả trạng thái</option>
-          {Object.entries(statusLabels).map(([value, label]) => (
+          {visibleOrderStatusOptions.map((value) => (
             <option key={value} value={value}>
-              {label}
+              {getOrderStatusLabel(value)}
             </option>
           ))}
         </select>
@@ -141,9 +118,9 @@ export function AdminOrdersPage() {
                 type="button"
                 onClick={() => setSelectedOrderId(order.id)}
                 className={`grid w-full gap-3 border-b border-slate-100 px-4 py-4 text-left hover:bg-slate-50 md:grid-cols-[1.1fr_1fr_auto] ${
-                activeOrderId === order.id ? 'bg-emerald-50' : ''
-              }`}
-            >
+                  activeOrderId === order.id ? 'bg-emerald-50' : ''
+                }`}
+              >
                 <span>
                   <span className="block font-semibold text-slate-950">{order.orderCode}</span>
                   <span className="mt-1 block text-sm text-slate-500">{formatDate(order.createdAt)}</span>
@@ -152,7 +129,7 @@ export function AdminOrdersPage() {
                 <span className="text-sm">
                   <span className="flex items-center gap-1 font-medium text-slate-900">
                     {statusIcon(order.orderStatus)}
-                    {statusLabels[order.orderStatus]}
+                    {getOrderStatusLabel(order.orderStatus)}
                   </span>
                   <span className="mt-1 block text-slate-500">{paymentLabels[order.paymentStatus]}</span>
                 </span>
@@ -175,7 +152,7 @@ export function AdminOrdersPage() {
                     <p className="text-sm text-slate-500">{detail.customerEmail}</p>
                   </div>
                   <span className="rounded-md bg-emerald-50 px-2 py-1 text-sm font-medium text-emerald-800">
-                    {statusLabels[detail.orderStatus]}
+                    {getOrderStatusLabel(detail.orderStatus)}
                   </span>
                 </div>
 
@@ -197,7 +174,9 @@ export function AdminOrdersPage() {
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{item.productName}</div>
-                        <div className="text-slate-500">x{item.quantity} - {item.variantDescription || 'Mặc định'}</div>
+                        <div className="text-slate-500">
+                          x{item.quantity} - {item.variantDescription || 'Mặc định'}
+                        </div>
                       </div>
                       <div className="font-semibold">{formatCurrency(item.lineTotal)}</div>
                     </div>
@@ -224,7 +203,7 @@ export function AdminOrdersPage() {
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-2">
-                  {(nextStatuses[detail.orderStatus] ?? []).map((nextStatus) => (
+                  {getAdminNextStatuses(detail.orderStatus).map((nextStatus) => (
                     <button
                       key={nextStatus}
                       type="button"
@@ -236,7 +215,7 @@ export function AdminOrdersPage() {
                           : 'bg-emerald-700 hover:bg-emerald-800'
                       }`}
                     >
-                      {statusLabels[nextStatus]}
+                      {getOrderStatusLabel(nextStatus)}
                     </button>
                   ))}
                 </div>
@@ -254,3 +233,11 @@ export function AdminOrdersPage() {
     </section>
   );
 }
+
+const paymentLabels: Record<PaymentStatus, string> = {
+  [PaymentStatus.Unpaid]: 'Chưa thanh toán',
+  [PaymentStatus.Pending]: 'Đang xử lý',
+  [PaymentStatus.Paid]: 'Đã thanh toán',
+  [PaymentStatus.Failed]: 'Thất bại',
+  [PaymentStatus.Refunded]: 'Đã hoàn tiền'
+};

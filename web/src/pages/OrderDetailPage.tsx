@@ -6,17 +6,7 @@ import { cancelOrder, createReview, getOrder } from '../api/orders';
 import { formatCurrency } from '../utils/format';
 import { OrderStatus } from '../types/order';
 import type { OrderItem } from '../types/order';
-
-const statusLabels: Record<OrderStatus, string> = {
-  [OrderStatus.Pending]: 'Chờ xác nhận',
-  [OrderStatus.Confirmed]: 'Đã xác nhận',
-  [OrderStatus.Preparing]: 'Đang chuẩn bị',
-  [OrderStatus.Shipping]: 'Đang giao',
-  [OrderStatus.Completed]: 'Hoàn tất',
-  [OrderStatus.Cancelled]: 'Đã hủy'
-};
-
-const cancellableStatuses: OrderStatus[] = [OrderStatus.Pending, OrderStatus.Confirmed, OrderStatus.Preparing];
+import { customerCancellableStatuses, getOrderStatusLabel } from '../utils/orderStatus';
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', {
@@ -118,7 +108,7 @@ export function OrderDetailPage() {
   }
 
   const order = orderQuery.data;
-  const canCancel = cancellableStatuses.includes(order.orderStatus);
+  const canCancel = customerCancellableStatuses.includes(order.orderStatus);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8">
@@ -130,7 +120,7 @@ export function OrderDetailPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-950">{order.orderCode}</h1>
           <p className="mt-2 text-sm text-slate-600">
-            {formatDate(order.createdAt)} - {statusLabels[order.orderStatus]}
+            {formatDate(order.createdAt)} - {getOrderStatusLabel(order.orderStatus)}
           </p>
         </div>
         {canCancel ? (
@@ -174,7 +164,9 @@ export function OrderDetailPage() {
                       {order.orderStatus === OrderStatus.Completed ? <ReviewForm item={item} orderId={order.id} /> : null}
                     </div>
                     <div className="text-sm sm:text-right">
-                      <div>{formatCurrency(item.unitPrice)} x {item.quantity}</div>
+                      <div>
+                        {formatCurrency(item.unitPrice)} x {item.quantity}
+                      </div>
                       <div className="mt-1 font-semibold text-emerald-700">{formatCurrency(item.lineTotal)}</div>
                     </div>
                   </div>
@@ -188,7 +180,7 @@ export function OrderDetailPage() {
             <div className="mt-4 space-y-3">
               {order.statusHistories.map((history) => (
                 <div key={`${history.createdAt}-${history.newStatus}`} className="text-sm">
-                  <div className="font-medium">{statusLabels[history.newStatus]}</div>
+                  <div className="font-medium">{getOrderStatusLabel(history.newStatus)}</div>
                   <div className="text-slate-500">{formatDate(history.createdAt)}</div>
                   {history.note ? <div className="text-slate-500">{history.note}</div> : null}
                 </div>

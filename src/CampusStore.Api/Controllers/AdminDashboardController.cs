@@ -1,5 +1,5 @@
+using CampusStore.Api;
 using CampusStore.Application.Dtos;
-using CampusStore.Domain.Constants;
 using CampusStore.Domain.Enums;
 using CampusStore.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CampusStore.Api.Controllers;
 
 [ApiController]
-[Authorize(Roles = $"{RoleNames.Staff},{RoleNames.Admin}")]
+[Authorize(Policy = AuthPolicies.StaffOrAdmin)]
 [Route("api/admin/dashboard")]
 public sealed class AdminDashboardController : ControllerBase
 {
@@ -21,8 +21,11 @@ public sealed class AdminDashboardController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<AdminDashboardDto>> Get(CancellationToken cancellationToken)
+    public async Task<ActionResult<AdminDashboardDto>> Get(
+        [FromQuery] string? range = null,
+        CancellationToken cancellationToken = default)
     {
+        var trendRange = NormalizeTrendRange(range);
         var completedOrders = _dbContext.Orders
             .AsNoTracking()
             .Where(order => order.OrderStatus == OrderStatus.Completed);
@@ -44,9 +47,11 @@ public sealed class AdminDashboardController : ControllerBase
 
         var ordersByStatus = (await _dbContext.Orders
                 .AsNoTracking()
-                .GroupBy(order => order.OrderStatus)
-                .Select(group => new OrderStatusCountDto(group.Key, group.Count()))
+                .Select(order => order.OrderStatus)
                 .ToListAsync(cancellationToken))
+            .Select(NormalizeStatus)
+            .GroupBy(status => status)
+            .Select(group => new OrderStatusCountDto(group.Key, group.Count()))
             .OrderBy(item => item.Status)
             .ToList();
 
@@ -129,6 +134,8 @@ public sealed class AdminDashboardController : ControllerBase
                     .Sum(item => (int?)item.Quantity) ?? 0))
             .ToListAsync(cancellationToken);
 
+        var trendPoints = await BuildTrendPointsAsync(trendRange, cancellationToken);
+
         return Ok(new AdminDashboardDto(
             completedRevenue,
             totalOrders,
@@ -141,6 +148,136 @@ public sealed class AdminDashboardController : ControllerBase
             ordersByStatus,
             topProducts,
             lowStockItems,
-            recentOrders));
+            recentOrders,
+            trendPoints,
+            trendRange));
     }
+
+    private async Task<IReadOnlyList<AdminDashboardTrendPointDto>> BuildTrendPointsAsync(
+        string range,
+        CancellationToken cancellationToken)
+    {
+        var buckets = BuildBuckets(range);
+        var start = buckets.First().Start;
+        var end = buckets.Last().End;
+
+        var orders = await _dbContext.Orders
+            .AsNoTracking()
+            .Where(order => order.CreatedAt >= start && order.CreatedAt < end)
+            .Select(order => new
+            {
+                order.CreatedAt,
+                order.TotalAmount,
+                order.OrderStatus
+            })
+            .ToListAsync(cancellationToken);
+
+        var revenueByBucket = orders
+            .Where(order => order.OrderStatus == OrderStatus.Completed)
+            .GroupBy(order => GetBucketStart(order.CreatedAt, range))
+            .ToDictionary(group => group.Key, group => group.Sum(order => order.TotalAmount));
+
+        var ordersByBucket = orders
+            .GroupBy(order => GetBucketStart(order.CreatedAt, range))
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        return buckets
+            .Select(bucket => new AdminDashboardTrendPointDto(
+                bucket.Label,
+                revenueByBucket.GetValueOrDefault(bucket.Start, 0),
+                ordersByBucket.GetValueOrDefault(bucket.Start, 0)))
+            .ToList();
+    }
+
+    private static string NormalizeTrendRange(string? range)
+    {
+        return range?.Trim().ToLowerInvariant() switch
+        {
+            "day" => "day",
+            "week" => "week",
+            "month" => "month",
+            _ => "day"
+        };
+    }
+
+    private static OrderStatus NormalizeStatus(OrderStatus status)
+    {
+        return status == (OrderStatus)3 ? OrderStatus.Shipping : status;
+    }
+
+    private static IReadOnlyList<TrendBucket> BuildBuckets(string range)
+    {
+        var today = DateTimeOffset.UtcNow.Date;
+        return range switch
+        {
+            "week" => BuildWeekBuckets(today),
+            "month" => BuildMonthBuckets(today),
+            _ => BuildDayBuckets(today)
+        };
+    }
+
+    private static IReadOnlyList<TrendBucket> BuildDayBuckets(DateTime today)
+    {
+        var start = new DateTimeOffset(today.AddDays(-13), TimeSpan.Zero);
+        return Enumerable.Range(0, 14)
+            .Select(index =>
+            {
+                var bucketStart = start.AddDays(index);
+                return new TrendBucket(
+                    bucketStart,
+                    bucketStart.AddDays(1),
+                    bucketStart.ToString("dd/MM"));
+            })
+            .ToList();
+    }
+
+    private static IReadOnlyList<TrendBucket> BuildWeekBuckets(DateTime today)
+    {
+        var startOfThisWeek = today.AddDays(-GetMondayOffset(today.DayOfWeek));
+        var start = new DateTimeOffset(startOfThisWeek.AddDays(-77), TimeSpan.Zero);
+        return Enumerable.Range(0, 12)
+            .Select(index =>
+            {
+                var bucketStart = start.AddDays(index * 7);
+                return new TrendBucket(
+                    bucketStart,
+                    bucketStart.AddDays(7),
+                    $"Tuần {bucketStart:dd/MM}");
+            })
+            .ToList();
+    }
+
+    private static IReadOnlyList<TrendBucket> BuildMonthBuckets(DateTime today)
+    {
+        var startOfThisMonth = new DateTime(today.Year, today.Month, 1);
+        var start = new DateTimeOffset(startOfThisMonth.AddMonths(-11), TimeSpan.Zero);
+        return Enumerable.Range(0, 12)
+            .Select(index =>
+            {
+                var bucketStart = start.AddMonths(index);
+                return new TrendBucket(
+                    bucketStart,
+                    bucketStart.AddMonths(1),
+                    bucketStart.ToString("MM/yyyy"));
+            })
+            .ToList();
+    }
+
+    private static DateTimeOffset GetBucketStart(DateTimeOffset value, string range)
+    {
+        var date = value.UtcDateTime.Date;
+        return range switch
+        {
+            "week" => new DateTimeOffset(date.AddDays(-GetMondayOffset(date.DayOfWeek)), TimeSpan.Zero),
+            "month" => new DateTimeOffset(new DateTime(date.Year, date.Month, 1), TimeSpan.Zero),
+            _ => new DateTimeOffset(date, TimeSpan.Zero)
+        };
+    }
+
+    private static int GetMondayOffset(DayOfWeek dayOfWeek)
+    {
+        return ((int)dayOfWeek + 6) % 7;
+    }
+
+    private sealed record TrendBucket(DateTimeOffset Start, DateTimeOffset End, string Label);
 }

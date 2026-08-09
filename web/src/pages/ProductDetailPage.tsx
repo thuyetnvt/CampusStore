@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { Link, useNavigate, useParams } from 'react-router';
+import { getMe } from '../api/auth';
 import { addCartItem } from '../api/cart';
 import { getProduct, getRelatedProducts } from '../api/catalog';
 import { ProductCard } from '../components/ProductCard';
@@ -15,6 +16,12 @@ export function ProductDetailPage() {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const { data: user } = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
+    retry: false,
+    staleTime: 5 * 60 * 1000
+  });
 
   const productQuery = useQuery({
     queryKey: ['product', idOrSlug],
@@ -65,7 +72,8 @@ export function ProductDetailPage() {
   const selectedVariantHasStock = Boolean(
     selectedVariant && selectedVariant.isActive && selectedVariant.stockQuantity > 0
   );
-  const canPurchase = selectedVariantHasStock && !addCartMutation.isPending;
+  const canUsePurchaseActions = !user || user.roles.includes('Customer');
+  const canSubmitPurchase = canUsePurchaseActions && selectedVariantHasStock && !addCartMutation.isPending;
 
   const displayPrice = selectedVariant?.price ?? product.salePrice ?? product.basePrice;
   const selectedVariantLabel = selectedVariant
@@ -198,9 +206,11 @@ export function ProductDetailPage() {
           </div>
 
           <div className="mt-6 flex gap-3">
+            {canUsePurchaseActions ? (
+              <>
             <button
               type="button"
-              disabled={!canPurchase || !selectedVariant}
+              disabled={!canSubmitPurchase || !selectedVariant}
               onClick={() => handleAddToCart(false)}
               className="rounded-md bg-emerald-700 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -208,12 +218,18 @@ export function ProductDetailPage() {
             </button>
             <button
               type="button"
-              disabled={!canPurchase || !selectedVariant}
+              disabled={!canSubmitPurchase || !selectedVariant}
               onClick={() => handleAddToCart(true)}
               className="rounded-md border border-slate-300 px-4 py-2 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             >
               Mua ngay
             </button>
+              </>
+            ) : (
+              <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-500">
+                Chỉ dành cho khách hàng
+              </div>
+            )}
           </div>
           {successMessage ? (
             <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">

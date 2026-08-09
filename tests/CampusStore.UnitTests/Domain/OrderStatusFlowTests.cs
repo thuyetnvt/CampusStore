@@ -8,11 +8,10 @@ public sealed class OrderStatusFlowTests
     [Theory]
     [InlineData(OrderStatus.Pending, OrderStatus.Confirmed)]
     [InlineData(OrderStatus.Pending, OrderStatus.Cancelled)]
-    [InlineData(OrderStatus.Confirmed, OrderStatus.Preparing)]
+    [InlineData(OrderStatus.Confirmed, OrderStatus.Shipping)]
     [InlineData(OrderStatus.Confirmed, OrderStatus.Cancelled)]
-    [InlineData(OrderStatus.Preparing, OrderStatus.Shipping)]
-    [InlineData(OrderStatus.Preparing, OrderStatus.Cancelled)]
     [InlineData(OrderStatus.Shipping, OrderStatus.Completed)]
+    [InlineData((OrderStatus)3, OrderStatus.Completed)]
     public void CanTransition_ReturnsTrue_ForAllowedTransitions(OrderStatus current, OrderStatus next)
     {
         Assert.True(OrderStatusFlow.CanTransition(current, next));
@@ -23,6 +22,8 @@ public sealed class OrderStatusFlowTests
     [InlineData(OrderStatus.Cancelled, OrderStatus.Confirmed)]
     [InlineData(OrderStatus.Shipping, OrderStatus.Pending)]
     [InlineData(OrderStatus.Pending, OrderStatus.Completed)]
+    [InlineData(OrderStatus.Pending, OrderStatus.Shipping)]
+    [InlineData(OrderStatus.Confirmed, OrderStatus.Pending)]
     public void CanTransition_ReturnsFalse_ForInvalidTransitions(OrderStatus current, OrderStatus next)
     {
         Assert.False(OrderStatusFlow.CanTransition(current, next));

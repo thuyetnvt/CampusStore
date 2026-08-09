@@ -1,7 +1,7 @@
 using System.Security.Claims;
+using CampusStore.Api;
 using CampusStore.Application.Common;
 using CampusStore.Application.Dtos;
-using CampusStore.Domain.Constants;
 using CampusStore.Domain.Entities;
 using CampusStore.Domain.Enums;
 using CampusStore.Domain.Rules;
@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CampusStore.Api.Controllers;
 
 [ApiController]
-[Authorize(Roles = $"{RoleNames.Staff},{RoleNames.Admin}")]
+[Authorize(Policy = AuthPolicies.StaffOrAdmin)]
 [Route("api/admin/orders")]
 public sealed class AdminOrdersController : ControllerBase
 {
@@ -117,6 +117,11 @@ public sealed class AdminOrdersController : ControllerBase
             if (order is null)
             {
                 return NotFound();
+            }
+
+            if (!Enum.IsDefined(typeof(OrderStatus), request.Status))
+            {
+                return BadRequest(new { message = "Trạng thái đơn hàng không hợp lệ." });
             }
 
             if (!OrderStatusFlow.CanTransition(order.OrderStatus, request.Status))

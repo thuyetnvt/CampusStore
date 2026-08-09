@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CampusStore.Api;
 using CampusStore.Application.Dtos;
 using CampusStore.Domain.Entities;
 using CampusStore.Infrastructure.Persistence;
@@ -9,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CampusStore.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = AuthPolicies.CustomerOnly)]
 [Route("api/checkout")]
 public sealed class CheckoutController : ControllerBase
 {

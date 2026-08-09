@@ -22,6 +22,14 @@ export interface LowStockVariant {
   lowStockThreshold: number;
 }
 
+export type AdminDashboardRange = 'day' | 'week' | 'month';
+
+export interface AdminDashboardTrendPoint {
+  label: string;
+  revenue: number;
+  orderCount: number;
+}
+
 export interface AdminDashboard {
   completedRevenue: number;
   totalOrders: number;
@@ -35,4 +43,6 @@ export interface AdminDashboard {
   topProducts: TopProduct[];
   lowStockItems: LowStockVariant[];
   recentOrders: AdminOrderListItem[];
+  trendPoints: AdminDashboardTrendPoint[];
+  trendRange: AdminDashboardRange;
 }
