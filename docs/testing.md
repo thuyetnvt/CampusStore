@@ -4,6 +4,15 @@
 
 Date: 2026-08-09
 
+### Storefront UI Follow-up
+
+- Checked HomePage in Chrome headless at desktop `1440x1100` and mobile `390x900`.
+- Fixed mobile hero overflow where the headline was clipped on the right.
+- Reworked the HomePage hero to show real product images from `web/public/images/products` on desktop and mobile.
+- `npm run lint` from `web`: passed.
+- `npm run build` from `web`: passed.
+- Backend was not started during this UI-only check, so product/category API-driven sections showed loading/error states only.
+
 ### Order Status Flow Update
 
 - `rg -n "Preparing|OrderStatus\.Preparing" src web tests`: no remaining UI/selectable status references found.

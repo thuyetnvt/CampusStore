@@ -44,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const displayPrice = product.salePrice ?? product.basePrice;
 
   return (
-    <article className="group flex h-full min-h-[380px] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md">
+    <article className="group flex h-full min-h-[390px] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md">
       <Link to={`/products/${product.slug}`} className="relative block">
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
           {product.primaryImageUrl ? (
@@ -58,12 +58,23 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.categoryName}
             </div>
           )}
+          <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-slate-950/25 to-transparent opacity-0 transition group-hover:opacity-100" />
         </div>
-        {hasSale ? (
-          <span className="absolute left-3 top-3 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm">
-            Giảm {discountPercent}%
+
+        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          {hasSale ? (
+            <span className="rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              Giảm {discountPercent}%
+            </span>
+          ) : null}
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${
+              hasStock ? 'bg-white/95 text-emerald-700' : 'bg-white/95 text-rose-700'
+            }`}
+          >
+            {hasStock ? 'Còn hàng' : 'Hết hàng'}
           </span>
-        ) : null}
+        </div>
       </Link>
 
       <div className="flex flex-1 flex-col px-4 py-4">
@@ -85,11 +96,9 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
 
         <div className="mt-3 space-y-1">
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-wrap items-baseline gap-2">
             <div className="text-base font-bold text-emerald-700">{formatCurrency(displayPrice)}</div>
-            {hasSale ? (
-              <div className="text-xs text-slate-400 line-through">{formatCurrency(product.basePrice)}</div>
-            ) : null}
+            {hasSale ? <div className="text-xs text-slate-400 line-through">{formatCurrency(product.basePrice)}</div> : null}
           </div>
           <div className={`text-xs font-medium ${hasStock ? 'text-emerald-700' : 'text-rose-600'}`}>
             {hasStock ? `Còn ${product.totalStock} sản phẩm` : 'Hết hàng'}
