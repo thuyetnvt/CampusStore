@@ -13,6 +13,14 @@ Date: 2026-08-09
 - `npm run build` from `web`: passed.
 - Backend was not started during this UI-only check, so product/category API-driven sections showed loading/error states only.
 
+### Legacy Order Status Startup Fix
+
+- Root cause checked from backend log: existing MySQL rows still contain `OrderStatus = 'Preparing'`, while the backend enum no longer had that value.
+- `Preparing` is now kept only as a legacy backend enum value so EF Core can materialize old rows; admin update validation still rejects selecting it as a new status.
+- `dotnet build -p:UseAppHost=false -p:OutDir=artifacts/dotnet-build/`: passed.
+- `dotnet test -p:UseAppHost=false -p:OutDir=artifacts/dotnet-test/`: passed with 22 unit tests and 3 integration tests.
+- Known warning still present: `NU1903` for transitive `Microsoft.OpenApi 2.0.0`.
+
 ### Order Status Flow Update
 
 - `rg -n "Preparing|OrderStatus\.Preparing" src web tests`: no remaining UI/selectable status references found.

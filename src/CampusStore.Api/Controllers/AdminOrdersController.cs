@@ -124,6 +124,11 @@ public sealed class AdminOrdersController : ControllerBase
                 return BadRequest(new { message = "Trạng thái đơn hàng không hợp lệ." });
             }
 
+            if ((int)request.Status == 3)
+            {
+                return BadRequest(new { message = "Trạng thái đơn hàng không hợp lệ." });
+            }
+
             if (!OrderStatusFlow.CanTransition(order.OrderStatus, request.Status))
             {
                 return BadRequest(new { message = "Chuyển trạng thái đơn hàng không hợp lệ." });
