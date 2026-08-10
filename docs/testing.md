@@ -4,6 +4,18 @@
 
 Date: 2026-08-09
 
+### Admin Management Completion Check
+
+Date: 2026-08-10
+
+- Wired real admin routes for categories, inventory, customers, coupons, and Admin-only user management.
+- Added frontend admin pages for coupon management and user/role management.
+- `npm run lint` from `web`: passed.
+- `npm run build` from `web`: passed; Vite still reports the existing chunk-size warning for a minified JS chunk over 500 kB.
+- `dotnet build`: initially failed because a running `CampusStore.Api (15416)` process locked DLL outputs; after stopping that process, build passed.
+- `dotnet test`: passed with 22 unit tests and 3 integration tests.
+- Known warning still present: `NU1903` for transitive `Microsoft.OpenApi 2.0.0`.
+
 ### Storefront UI Follow-up
 
 - Checked HomePage in Chrome headless at desktop `1440x1100` and mobile `390x900`.

@@ -9,8 +9,12 @@ import { AccountPage } from '../pages/AccountPage';
 import { CartPage } from '../pages/CartPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminOrdersPage } from '../pages/AdminOrdersPage';
-import { AdminPlaceholderPage } from '../pages/admin/AdminPlaceholderPage';
+import { AdminCategoriesPage } from '../pages/admin/AdminCategoriesPage';
+import { AdminCouponsPage } from '../pages/admin/AdminCouponsPage';
+import { AdminCustomersPage } from '../pages/admin/AdminCustomersPage';
+import { AdminInventoryPage } from '../pages/admin/AdminInventoryPage';
 import { AdminProductsPage } from '../pages/admin/AdminProductsPage';
+import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -56,30 +60,13 @@ export const router = createBrowserRouter([
           { index: true, element: <AdminDashboardPage /> },
           { path: 'orders', element: <AdminOrdersPage /> },
           { path: 'products', element: <AdminProductsPage /> },
-          {
-            path: 'categories',
-            element: <AdminPlaceholderPage title="Quản lý danh mục" description="Chức năng danh mục chưa có màn hình riêng trong code hiện tại." />
-          },
-          {
-            path: 'inventory',
-            element: <AdminPlaceholderPage title="Quản lý tồn kho" description="Chức năng tồn kho chưa có màn hình riêng trong code hiện tại." />
-          },
-          {
-            path: 'customers',
-            element: <AdminPlaceholderPage title="Danh sách khách hàng" description="Chức năng khách hàng chưa có màn hình riêng trong code hiện tại." />
-          },
-          {
-            path: 'coupons',
-            element: <AdminPlaceholderPage title="Quản lý voucher" description="Chức năng voucher chưa có màn hình riêng trong code hiện tại." />
-          },
+          { path: 'categories', element: <AdminCategoriesPage /> },
+          { path: 'inventory', element: <AdminInventoryPage /> },
+          { path: 'customers', element: <AdminCustomersPage /> },
+          { path: 'coupons', element: <AdminCouponsPage /> },
           {
             element: <AdminOnlyRoute />,
-            children: [
-              {
-                path: 'users',
-                element: <AdminPlaceholderPage title="Tài khoản quản trị viên" description="Chức năng quản lý user/role Admin-only chưa có API trong code hiện tại." />
-              }
-            ]
+            children: [{ path: 'users', element: <AdminUsersPage /> }]
           }
         ]
       }
